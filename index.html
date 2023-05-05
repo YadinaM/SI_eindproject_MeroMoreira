@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <!--demo gevolgd van: https://www.youtube.com/watch?v=OIo-DIOkNVg-->
 <!--Bronvermelding: The Coding Train. (2020, 9 januari). ml5.js Pose Estimation with PoseNet [Video]. YouTube. Geraadpleegd op 1 mei 2023, van https://www.youtube.com/watch?v=OIo-DIOkNVg-->
+<!--demo gevolgd van: https://www.youtube.com/watch?v=FYgYyq-xqAw-->
+<!--Bronvermelding: The Coding Train. (2020b, januari 15). ml5.js: Pose Classification with PoseNet and ml5.neuralNetwork() [Video]. YouTube. Geraadpleegd op 5 mei 2023, van https://www.youtube.com/watch?v=FYgYyq-xqAw-->
 <html lang="en">
   <head>
     <title>Filter for beginners</title>
@@ -12,7 +14,7 @@
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
     <!-- got this from: https://learn.ml5js.org -->
 </head>
-  <body>
+<body>
     <h1>Skelet filter</h1>
     <p>Create a simple filter for starters</p>
     <script>
@@ -26,22 +28,72 @@
         let pose;
         let skeleton;
 
+        let brain; //global variable for neural network
+        let state = 'waiting'; //global variable for state of the neural network
+        let targetLabel; //global variable for target label
+
+        function keyPressed(){
+            if (key == 's'){
+                brain.saveData(); //save the data collected by the neural network
+            } else{
+                targetLabel = key; //when a key is pressed, the target label is the key
+                console.log(targetLabel);
+                setTimeout(function(){ //wait 3 seconds before starting to collect data
+                    console.log("collecting");
+                    state = 'collecting'; //when key is pressed, change state to collecting
+                    setTimeout(function(){ //wait 3 seconds before stopping to collect data
+                        console.log("not collecting");
+                        state = 'waiting'; //when key is pressed, change state to waiting
+                    }, 3000);
+                }, 3000);
+            }
+        }
+
         function setup() {
             createCanvas(640, 480);
             video = createCapture(VIDEO); //capture video from webcam
             video.hide();
             poseNet = ml5.poseNet(video, modelLoaded);
             poseNet.on('pose', gotPoses); //an event listener that returns the results when a pose is detected
+            
+            let options = {
+                inputs: 34, //number of inputs: 17 x 2 (x,y) = 34
+                outputs: 4, //number of outputs
+                task: 'classification', //classification = output is a category, regression = output is a number
+                debug: true //show debug info
+            }
+
+            brain = ml5.neuralNetwork(options); //create a neural network
+            /*brain.loadData('poses.json', dataReady);*/ //load the data from the json file
         }
+        /*function dataReady(){
+            brain.normalizeData(); //normalize the data
+            brain.train({epochs: 50}, finished); //train the neural network
+        }
+        function finished(){
+            console.log("model trained");
+            brain.save(); //save the model
+        }*/
         
         function gotPoses(poses){
-            console.log(poses);
+            //console.log(poses);
             if(poses.length > 0){
                 pose = poses[0].pose; 
                 //first pose array in global variable -> has 2 properties: pose & skeleton = we only ask de pose, not skeleton
                 skeleton = poses[0].skeleton;
                 //first pose array in global variable -> has 2 properties: pose & skeleton = we only ask de skeleton, not pose
                 skeleton = poses[0].skeleton;
+                if(state == 'collecting'){
+                    let inputs = []; //create an empty array for the inputs
+                    for(let i = 0; i < pose.keypoints.length; i++){
+                        let x = pose.keypoints[i].position.x; //get the x position of the keypoint
+                        let y = pose.keypoints[i].position.y; //get the y position of the keypoint
+                        inputs.push(x); //add the x position to the inputs array
+                        inputs.push(y); //add the y position to the inputs array
+                    }
+                    let target = [targetLabel]; //create an array with the target label [A,B,C,D
+                    brain.addData(inputs, target); //add data to the neural network
+                }
             }
         }
 
@@ -67,12 +119,12 @@
                 
                 //each keypoint consists of a score, part and position
                 //loop through keypoints and draw a circle on each one
-                for(let i = 0; i < pose.keypoints.length; i++){
+                /*for(let i = 0; i < pose.keypoints.length; i++){
                     let x = pose.keypoints[i].position.x; //get the x position of the keypoint
                     let y = pose.keypoints[i].position.y; //get the y position of the keypoint
                     fill(0,255,0);
                     ellipse(x,y,16,16); //draw a circle on the keypoint
-                }
+                }*/
                 for(let i = 0; i < skeleton.length; i++){
                     let a = skeleton[i][0]; //get the first keypoint
                     let b = skeleton[i][1]; //get the second keypoint
