@@ -29,6 +29,7 @@
         let skeleton;
 
         let brain; //global variable for neural network
+        let poseLabel = "zwaai";
         let state = 'waiting'; //global variable for state of the neural network
         let targetLabel; //global variable for target label
 
@@ -44,8 +45,8 @@
                     setTimeout(function(){ //wait 3 seconds before stopping to collect data
                         console.log("not collecting");
                         state = 'waiting'; //when key is pressed, change state to waiting
-                    }, 3000);
-                }, 3000);
+                    }, 5000);
+                }, 5000);
             }
         }
 
@@ -64,16 +65,52 @@
             }
 
             brain = ml5.neuralNetwork(options); //create a neural network
-            /*brain.loadData('poses.json', dataReady);*/ //load the data from the json file
+            const modelInfo = {
+                model: 'model/model.json',
+                metadata: 'model/metadata.json',
+                weights: 'model/weights.bin',
+            };
+            brain.load(modelInfo, brainLoaded); //load the model
+            //brain.loadData('zwaai.json', dataReady); //load the data from the json file
         }
-        /*function dataReady(){
+
+        function brainLoaded(){
+            console.log("pose classification ready");
+            brain.classify(inputs, gotResult); //classify the inputs
+            classifyPose(); //classify the pose
+        }
+
+        function classifyPose(){
+            if(pose){
+                let inputs = []; //create an empty array for the inputs
+                for(let i = 0; i < pose.keypoints.length; i++){
+                    let x = pose.keypoints[i].position.x; //get the x position of the keypoint
+                    let y = pose.keypoints[i].position.y; //get the y position of the keypoint
+                    inputs.push(x); //add the x position to the inputs array
+                    inputs.push(y); //add the y position to the inputs array
+                }
+                brain.classify(inputs, gotResult); //classify the inputs
+            } else{
+                setTimeout(classifyPose, 100); //if there is no pose, wait 100 milliseconds and try again
+            }
+        }
+
+        function gotResult(error, results){
+            if(results[0].confidence > 0.75){ //if the confidence is higher than 0.75
+                console.log(results[0].label); //print the label
+            }
+            poseLabel = results[0].label; //get the label from the results
+            classifyPose(); //classify the pose
+        }
+
+        function dataReady(){
             brain.normalizeData(); //normalize the data
             brain.train({epochs: 50}, finished); //train the neural network
         }
         function finished(){
             console.log("model trained");
             brain.save(); //save the model
-        }*/
+        }
         
         function gotPoses(poses){
             //console.log(poses);
@@ -103,19 +140,22 @@
         }
 
         function draw() {
-            image(video, 0, 0); //draw the video on the canvas
+            push(); //save the current drawing style settings and transformations
+            translate(video.width, 0); //move the origin to the top right corner
+            scale(-1, 1); //flip the video horizontally
+            image(video, 0, 0, video.width, video.height); //draw the video on the canvas
             if(pose){
                 let eyeR = pose.rightEye; //get the right eye position
                 let eyeL = pose.leftEye; //get the left eye position
                 let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y); //distance between the eyes for better calculation nose position when standing close to camera
                 //more realistic experience, better proportions
                 
-                fill(255,0,0);
+                /*fill(255,0,0);
                 ellipse(pose.nose.x, pose.nose.y, d); //draw a circle on the nose
                 fill(0,0,255);
                 ellipse(pose.rightWrist.x, pose.rightWrist.y, 64); //draw a circle on the right wrist
                 fill(0,0,255);
-                ellipse(pose.leftWrist.x, pose.leftWrist.y, 64); //draw a circle on the left wrist 
+                ellipse(pose.leftWrist.x, pose.leftWrist.y, 64);*/ //draw a circle on the left wrist 
                 
                 //each keypoint consists of a score, part and position
                 //loop through keypoints and draw a circle on each one
@@ -133,6 +173,12 @@
                     line(a.position.x, a.position.y, b.position.x, b.position.y); //draw a line between the keypoints
                 }
             }
+            pop(); //restore the previous drawing style settings and transformations
+            fill(255,0,255);
+            noStroke();
+            textSize(512);
+            textAlign(CENTER, CENTER);
+            text(targetLabel, width / 2, height / 2); //draw the target label on the screen
         }
     </script>
   </body>
