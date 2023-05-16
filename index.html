@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta charset="utf-8">
     <title>Filter for beginners</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- p5 -->
@@ -9,7 +10,13 @@
     <!-- ml5 -->
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
     <!-- got this from: https://learn.ml5js.org -->
+    <link rel="stylesheet" href="https://use.typekit.net/nnr1bhn.css">
+    <link rel="stylesheet" href="https://use.typekit.net/nnr1bhn.css">
     <style>
+        body{
+           background: #000;
+
+        }
         video{
             display:none;
             /* hide the video element, but still need it to capture the video */
@@ -24,7 +31,9 @@
             margin-left: auto;
             margin-right: auto;
             display: block;
-            background-color: aquamarine;
+            background-color:aquamarine;
+            font-family: "sofia-pro", sans-serif;
+            font-weight: 700;
             border:none;
             padding-left:40px;
             padding-right:40px;
@@ -33,14 +42,38 @@
             border-radius: 10px;
             margin-top: 20px;
         }
-        h1,p{
+        button:hover{
+            background-color: #EF865A;
+            color: white;
+        }
+        h1{
             text-align: center;
+            color: white;
+            font-family: "futura-pt-bold", sans-serif;
+            font-weight: 700;
+            font-style: normal;
+            letter-spacing:1px;
+        }
+        p{
+            text-align: center;
+            color: #EF865A;
+            font-family: "sofia-pro", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            letter-spacing:1px;
+        }
+        starsButton{
+            background-color: #653fe1;
+            color: white;
         }
     </style>
 </head>
     <body>
-        <h1>Smile for us!</h1>
-        <p>Choose your filter</p>
+        <div>
+        <h1>Welcome to our XD Photobooth!</h1>
+        <p>Say cheeeeseeeee</p>
+        </div>
+        <div>
     </body>
     <script>
         //preview bool true false alvorens downloaden
@@ -50,13 +83,28 @@
         let poseNet;
         let pose;
         let skeleton;
+
+        let applyFilter = false; // Variable to track if the "stars" filter should be applied or not
+        let starsButton, noFilterButton; // Variables to store the buttons
        
         function setup() {
-        let canvas = createCanvas(500, 380);
+        let canvas = createCanvas(500, 370);
         background(51);
+
+        // Create the buttons
+        starsButton = createButton('Stars');
+        starsButton.mousePressed(applyStarsFilter); // Call the applyStarsFilter function when the button is clicked
+        starsButton.style('background-color', '#653fe1');
+        noFilterButton = createButton('No Filter');
+        noFilterButton.mousePressed(applyNoFilter); // Call the applyNoFilter function when the button is clicked
+        noFilterButton.style('background-color', '#653fe1');
+        starsButton.position(100, 400);
+        noFilterButton.position(starsButton.width + 120, 400);
+        
         video = createCapture(VIDEO); //access live webcam
-        video.size(500, 380); 
-        button = createButton('snap!'); //create a button called "snap"
+        video.size(500, 370); 
+
+        button = createButton('snap this!'); //create a button called "snap"
         button.mousePressed(takesnap); //when the button is pressed, call the function called "takesnap" 
 
         poseNet = ml5.poseNet(video, modelLoaded);
@@ -64,9 +112,16 @@
         }
 
         function takesnap() {
-       
-        let img = saveCanvas(canvas, 'myCanvas', 'jpg');
-        //image(img, 0, 0);
+            let img = saveCanvas(canvas, 'myCanvas', 'jpg');
+            //image(img, 0, 0);
+        }
+
+        function applyStarsFilter() {
+            applyFilter = true; // Set applyFilter to true to apply the "stars" filter
+        }
+
+        function applyNoFilter() {
+            applyFilter = false; // Set applyFilter to false to show the camera feed without a filter
         }
 
         function gotPoses(poses){
@@ -88,15 +143,47 @@
 
         function draw() {
         //image(video, 0, 0); 
-        if(pose){
-                let eyeR = pose.rightEye; //get the right eye position
-                let eyeL = pose.leftEye; //get the left eye position
-                let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y); //distance between the eyes for better calculation nose position when standing close to camera
-                //more realistic experience, better proportions
-                fill(255,0,0);
-                ellipse(pose.nose.x, pose.nose.y, d); 
+            if(pose){
+                //hashtag
+                textSize(20);
+                textAlign(RIGHT, BOTTOM);
+                fill(255);
+                text("We are XD", width - 10, height - 10);
+                //variables
+                let eyeR = pose.rightEye;
+                let eyeL = pose.leftEye;
+                let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
+
+                if (applyFilter) {
+                    // Draw stars on the eyes
+                    fill(215, 247, 129);
+                    noStroke();
+                    drawStar(eyeL.x, eyeL.y, d / 3);
+                    drawStar(eyeR.x, eyeR.y, d / 3);
+                } else {
+                // Display the camera feed without a filter
+                image(video, 0, 0);
+                }
             }
         }
+        function drawStar(x, y, size) {
+            // Calculate the angles between points
+            let angle = TWO_PI / 5;
+            
+            // Begin drawing the star
+            beginShape();
+            
+            for (let a = -HALF_PI; a < TWO_PI - HALF_PI; a += angle) {
+                let sx = x + cos(a) * size;
+                let sy = y + sin(a) * size;
+                vertex(sx, sy);
+                
+                let px = x + cos(a + angle / 2) * (size / 2);
+                let py = y + sin(a + angle / 2) * (size / 2);
+                vertex(px, py);
+            }
+            endShape(CLOSE);
+            }
 
     </script>
 </html>
