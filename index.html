@@ -1,10 +1,7 @@
 <!DOCTYPE html>
-<!--demo gevolgd van: https://www.youtube.com/watch?v=OIo-DIOkNVg-->
-<!--Bronvermelding: The Coding Train. (2020, 9 januari). ml5.js Pose Estimation with PoseNet [Video]. YouTube. Geraadpleegd op 1 mei 2023, van https://www.youtube.com/watch?v=OIo-DIOkNVg-->
-<!--demo gevolgd van: https://www.youtube.com/watch?v=FYgYyq-xqAw-->
-<!--Bronvermelding: The Coding Train. (2020b, januari 15). ml5.js: Pose Classification with PoseNet and ml5.neuralNetwork() [Video]. YouTube. Geraadpleegd op 5 mei 2023, van https://www.youtube.com/watch?v=FYgYyq-xqAw-->
 <html lang="en">
   <head>
+    <meta charset="utf-8">
     <title>Filter for beginners</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- p5 -->
@@ -13,173 +10,180 @@
     <!-- ml5 -->
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
     <!-- got this from: https://learn.ml5js.org -->
-</head>
-<body>
-    <h1>Skelet filter</h1>
-    <p>Create a simple filter for starters</p>
-    <script>
-        // Your code will go here
-        // open up your console - if everything loaded properly you should see the latest ml5 version
-        //console.log('ml5 version:', ml5.version);
+    <link rel="stylesheet" href="https://use.typekit.net/nnr1bhn.css">
+    <link rel="stylesheet" href="https://use.typekit.net/nnr1bhn.css">
+    <style>
+        body{
+           background: #000;
 
-        //global variables
+        }
+        video{
+            display:none;
+            /* hide the video element, but still need it to capture the video */
+        }
+        canvas{
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            border-radius: 10px;
+        }
+        button{
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            background-color:aquamarine;
+            font-family: "sofia-pro", sans-serif;
+            font-weight: 700;
+            border:none;
+            padding-left:40px;
+            padding-right:40px;
+            padding-top:10px;
+            padding-bottom:10px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        button:hover{
+            background-color: #EF865A;
+            color: white;
+        }
+        h1{
+            text-align: center;
+            color: white;
+            font-family: "futura-pt-bold", sans-serif;
+            font-weight: 700;
+            font-style: normal;
+            letter-spacing:1px;
+        }
+        p{
+            text-align: center;
+            color: #EF865A;
+            font-family: "sofia-pro", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            letter-spacing:1px;
+        }
+        starsButton{
+            background-color: #653fe1;
+            color: white;
+        }
+    </style>
+</head>
+    <body>
+        <div>
+        <h1>Welcome to our XD Photobooth!</h1>
+        <p>Say cheeeeseeeee</p>
+        </div>
+        <div>
+    </body>
+    <script>
+        //preview bool true false alvorens downloaden
         let video;
+        let button;
+
         let poseNet;
         let pose;
         let skeleton;
 
-        let brain; //global variable for neural network
-        let poseLabel = "zwaai";
-        let state = 'waiting'; //global variable for state of the neural network
-        let targetLabel; //global variable for target label
-
-        function keyPressed(){
-            if (key == 's'){
-                brain.saveData(); //save the data collected by the neural network
-            } else{
-                targetLabel = key; //when a key is pressed, the target label is the key
-                console.log(targetLabel);
-                setTimeout(function(){ //wait 3 seconds before starting to collect data
-                    console.log("collecting");
-                    state = 'collecting'; //when key is pressed, change state to collecting
-                    setTimeout(function(){ //wait 3 seconds before stopping to collect data
-                        console.log("not collecting");
-                        state = 'waiting'; //when key is pressed, change state to waiting
-                    }, 5000);
-                }, 5000);
-            }
-        }
-
+        let applyFilter = false; // Variable to track if the "stars" filter should be applied or not
+        let starsButton, noFilterButton; // Variables to store the buttons
+       
         function setup() {
-            createCanvas(640, 480);
-            video = createCapture(VIDEO); //capture video from webcam
-            video.hide();
-            poseNet = ml5.poseNet(video, modelLoaded);
-            poseNet.on('pose', gotPoses); //an event listener that returns the results when a pose is detected
-            
-            let options = {
-                inputs: 34, //number of inputs: 17 x 2 (x,y) = 34
-                outputs: 4, //number of outputs
-                task: 'classification', //classification = output is a category, regression = output is a number
-                debug: true //show debug info
-            }
+        let canvas = createCanvas(500, 370);
+        background(51);
 
-            brain = ml5.neuralNetwork(options); //create a neural network
-            const modelInfo = {
-                model: 'model/model.json',
-                metadata: 'model/metadata.json',
-                weights: 'model/weights.bin',
-            };
-            brain.load(modelInfo, brainLoaded); //load the model
-            //brain.loadData('zwaai.json', dataReady); //load the data from the json file
-        }
-
-        function brainLoaded(){
-            console.log("pose classification ready");
-            brain.classify(inputs, gotResult); //classify the inputs
-            classifyPose(); //classify the pose
-        }
-
-        function classifyPose(){
-            if(pose){
-                let inputs = []; //create an empty array for the inputs
-                for(let i = 0; i < pose.keypoints.length; i++){
-                    let x = pose.keypoints[i].position.x; //get the x position of the keypoint
-                    let y = pose.keypoints[i].position.y; //get the y position of the keypoint
-                    inputs.push(x); //add the x position to the inputs array
-                    inputs.push(y); //add the y position to the inputs array
-                }
-                brain.classify(inputs, gotResult); //classify the inputs
-            } else{
-                setTimeout(classifyPose, 100); //if there is no pose, wait 100 milliseconds and try again
-            }
-        }
-
-        function gotResult(error, results){
-            if(results[0].confidence > 0.75){ //if the confidence is higher than 0.75
-                console.log(results[0].label); //print the label
-            }
-            poseLabel = results[0].label; //get the label from the results
-            classifyPose(); //classify the pose
-        }
-
-        function dataReady(){
-            brain.normalizeData(); //normalize the data
-            brain.train({epochs: 50}, finished); //train the neural network
-        }
-        function finished(){
-            console.log("model trained");
-            brain.save(); //save the model
-        }
+        // Create the buttons
+        starsButton = createButton('Stars');
+        starsButton.mousePressed(applyStarsFilter); // Call the applyStarsFilter function when the button is clicked
+        starsButton.style('background-color', '#653fe1');
+        noFilterButton = createButton('No Filter');
+        noFilterButton.mousePressed(applyNoFilter); // Call the applyNoFilter function when the button is clicked
+        noFilterButton.style('background-color', '#653fe1');
+        starsButton.position(100, 400);
+        noFilterButton.position(starsButton.width + 120, 400);
         
+        video = createCapture(VIDEO); //access live webcam
+        video.size(500, 370); 
+
+        button = createButton('snap this!'); //create a button called "snap"
+        button.mousePressed(takesnap); //when the button is pressed, call the function called "takesnap" 
+
+        poseNet = ml5.poseNet(video, modelLoaded);
+        poseNet.on('pose', gotPoses);
+        }
+
+        function takesnap() {
+            let img = saveCanvas(canvas, 'myCanvas', 'jpg');
+            //image(img, 0, 0);
+        }
+
+        function applyStarsFilter() {
+            applyFilter = true; // Set applyFilter to true to apply the "stars" filter
+        }
+
+        function applyNoFilter() {
+            applyFilter = false; // Set applyFilter to false to show the camera feed without a filter
+        }
+
         function gotPoses(poses){
-            //console.log(poses);
+            image(video, 0,0); //draw the image being captured on webcam onto the canvas at the position (0, 0) of the canvas
+            
+            console.log(poses);
             if(poses.length > 0){
                 pose = poses[0].pose; 
                 //first pose array in global variable -> has 2 properties: pose & skeleton = we only ask de pose, not skeleton
                 skeleton = poses[0].skeleton;
                 //first pose array in global variable -> has 2 properties: pose & skeleton = we only ask de skeleton, not pose
                 skeleton = poses[0].skeleton;
-                if(state == 'collecting'){
-                    let inputs = []; //create an empty array for the inputs
-                    for(let i = 0; i < pose.keypoints.length; i++){
-                        let x = pose.keypoints[i].position.x; //get the x position of the keypoint
-                        let y = pose.keypoints[i].position.y; //get the y position of the keypoint
-                        inputs.push(x); //add the x position to the inputs array
-                        inputs.push(y); //add the y position to the inputs array
-                    }
-                    let target = [targetLabel]; //create an array with the target label [A,B,C,D
-                    brain.addData(inputs, target); //add data to the neural network
-                }
             }
         }
 
-        //check if model is loaded
         function modelLoaded(){
             console.log("ready");
         }
 
         function draw() {
-            push(); //save the current drawing style settings and transformations
-            translate(video.width, 0); //move the origin to the top right corner
-            scale(-1, 1); //flip the video horizontally
-            image(video, 0, 0, video.width, video.height); //draw the video on the canvas
+        //image(video, 0, 0); 
             if(pose){
-                let eyeR = pose.rightEye; //get the right eye position
-                let eyeL = pose.leftEye; //get the left eye position
-                let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y); //distance between the eyes for better calculation nose position when standing close to camera
-                //more realistic experience, better proportions
-                
-                /*fill(255,0,0);
-                ellipse(pose.nose.x, pose.nose.y, d); //draw a circle on the nose
-                fill(0,0,255);
-                ellipse(pose.rightWrist.x, pose.rightWrist.y, 64); //draw a circle on the right wrist
-                fill(0,0,255);
-                ellipse(pose.leftWrist.x, pose.leftWrist.y, 64);*/ //draw a circle on the left wrist 
-                
-                //each keypoint consists of a score, part and position
-                //loop through keypoints and draw a circle on each one
-                /*for(let i = 0; i < pose.keypoints.length; i++){
-                    let x = pose.keypoints[i].position.x; //get the x position of the keypoint
-                    let y = pose.keypoints[i].position.y; //get the y position of the keypoint
-                    fill(0,255,0);
-                    ellipse(x,y,16,16); //draw a circle on the keypoint
-                }*/
-                for(let i = 0; i < skeleton.length; i++){
-                    let a = skeleton[i][0]; //get the first keypoint
-                    let b = skeleton[i][1]; //get the second keypoint
-                    strokeWeight(2);
-                    stroke(255);
-                    line(a.position.x, a.position.y, b.position.x, b.position.y); //draw a line between the keypoints
+                //hashtag
+                textSize(20);
+                textAlign(RIGHT, BOTTOM);
+                fill(255);
+                text("We are XD", width - 10, height - 10);
+                //variables
+                let eyeR = pose.rightEye;
+                let eyeL = pose.leftEye;
+                let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
+
+                if (applyFilter) {
+                    // Draw stars on the eyes
+                    fill(215, 247, 129);
+                    noStroke();
+                    drawStar(eyeL.x, eyeL.y, d / 3);
+                    drawStar(eyeR.x, eyeR.y, d / 3);
+                } else {
+                // Display the camera feed without a filter
+                image(video, 0, 0);
                 }
             }
-            pop(); //restore the previous drawing style settings and transformations
-            fill(255,0,255);
-            noStroke();
-            textSize(512);
-            textAlign(CENTER, CENTER);
-            text(targetLabel, width / 2, height / 2); //draw the target label on the screen
         }
+        function drawStar(x, y, size) {
+            // Calculate the angles between points
+            let angle = TWO_PI / 5;
+            
+            // Begin drawing the star
+            beginShape();
+            
+            for (let a = -HALF_PI; a < TWO_PI - HALF_PI; a += angle) {
+                let sx = x + cos(a) * size;
+                let sy = y + sin(a) * size;
+                vertex(sx, sy);
+                
+                let px = x + cos(a + angle / 2) * (size / 2);
+                let py = y + sin(a + angle / 2) * (size / 2);
+                vertex(px, py);
+            }
+            endShape(CLOSE);
+            }
+
     </script>
-  </body>
 </html>
