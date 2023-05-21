@@ -19,9 +19,9 @@ let capturing = true;
 
 function preload() {
   filterImages = {
-    stars: loadImage('crown.svg'),
-    hat: loadImage('muts.png'),
-    mustache: loadImage('snor.png')
+    stars: loadImage('img/crown.svg'),
+    hat: loadImage('img/muts.png'),
+    mustache: loadImage('img/snor.png')
   };
 }
 
