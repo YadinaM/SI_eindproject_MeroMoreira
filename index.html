@@ -84,47 +84,53 @@
         let pose;
         let skeleton;
 
-        let applyFilter = false; // Variable to track if the "stars" filter should be applied or not
-        let starsButton, noFilterButton, mutsButton; // Variables to store the buttons
+        let applyFilter = 'none'; // Variable to track if the "stars" filter should be applied or not
+        let starsButton, noFilterButton, mutsButton, mustacheButton; // Variables to store the buttons
 
         let hatImage;
+        let snorImage;
 
         function preload() {
             hatImage = loadImage('muts.png');
+            snorImage = loadImage('snor.png');
         }
 
         function setup() {
-        let canvas = createCanvas(500, 370);
-        background(51);
+            let canvas = createCanvas(500, 370);
+            background(51);
 
-        // Create the buttons
-        
-        starsButton = createButton('Stars');
-        starsButton.mousePressed(applyStarsFilter); // Call the applyStarsFilter function when the button is clicked
-        starsButton.style('background-color', '#653fe1');
+            // Create the buttons
+            starsButton = createButton('Stars');
+            starsButton.mousePressed(applyStarsFilter); // Call the applyStarsFilter function when the button is clicked
+            starsButton.style('background-color', '#653fe1');
 
-        noFilterButton = createButton('No Filter');
-        noFilterButton.mousePressed(applyNoFilter); // Call the applyNoFilter function when the button is clicked
-        noFilterButton.style('background-color', '#653fe1');
+            noFilterButton = createButton('No Filter');
+            noFilterButton.mousePressed(applyNoFilter); // Call the applyNoFilter function when the button is clicked
+            noFilterButton.style('background-color', '#653fe1');
 
-        mutsButton = createButton('Muts Joris');
-        mutsButton.mousePressed(applyMutsFilter); // Call the applyMutsFilter function when the button is clicked
-        mutsButton.style('background-color', '#653fe1');
+            mutsButton = createButton('Red hat');
+            mutsButton.mousePressed(applyMutsFilter); // Call the applyMutsFilter function when the button is clicked
+            mutsButton.style('background-color', '#653fe1');
 
-
-        starsButton.position(100, 400);
-        noFilterButton.position(starsButton.width + 120, 400);
-        mutsButton.position(100, 450);
+            mustacheButton = createButton('mustache');
+            mustacheButton.mousePressed(applyMustacheFilter); // Call the applyMustacheFilter function when the button is clicked
+            mustacheButton.style('background-color', '#653fe1');
 
 
-        video = createCapture(VIDEO); //access live webcam
-        video.size(500, 370); 
+            starsButton.position(100, 400);
+            noFilterButton.position(starsButton.width + 120, 400);
+            mutsButton.position(100, 450);
+            mustacheButton.position(mutsButton.width + 120, 450);
 
-        button = createButton('snap this!'); //create a button called "snap"
-        button.mousePressed(takesnap); //when the button is pressed, call the function called "takesnap" 
 
-        poseNet = ml5.poseNet(video, modelLoaded);
-        poseNet.on('pose', gotPoses);
+            video = createCapture(VIDEO); //access live webcam
+            video.size(500, 370); 
+
+            button = createButton('snap this!'); //create a button called "snap"
+            button.mousePressed(takesnap); //when the button is pressed, call the function called "takesnap" 
+
+            poseNet = ml5.poseNet(video, modelLoaded);
+            poseNet.on('pose', gotPoses);
         }
 
         function takesnap() {
@@ -137,11 +143,15 @@
         }
 
         function applyMutsFilter() {
-            applyFilter = 'muts'; // Set applymuts to true to apply the "stars" filter
+            applyFilter = 'hat'; // Set applymuts to true to apply the "stars" filter
         }
 
         function applyNoFilter() {
             applyFilter = 'none'; // Set applyFilter to false to show the camera feed without a filter
+        }
+
+        function applyMustacheFilter(){
+            applyFilter = "mustache";
         }
 
         function gotPoses(poses){
@@ -170,9 +180,27 @@
                 fill(255);
                 text("We are XD", width - 10, height - 10);
                 //variables
+                let noseX = pose.nose.x;
+                let noseY = pose.nose.y;
+
                 let eyeR = pose.rightEye;
                 let eyeL = pose.leftEye;
                 let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
+
+                let hatWidth = d * 2.5; // Adjust this value to scale the width of the hat
+                let hatHeight = hatWidth * (hatImage.height / hatImage.width);
+
+                // Calculate the position to place the hat on the person's head
+                let hatX = noseX - hatWidth / 2;
+                let hatY = noseY - hatHeight * 1.5;
+
+                let musWidth = d * 1.5;
+                let musHeight = musWidth * (snorImage.height / snorImage.width);
+
+                // Calculate the position to place the mustache
+                let musX = noseX - musWidth / 2;
+                let musY = noseY - musHeight * 0.1;
+
 
                 switch (applyFilter) {
                     case 'stars':
@@ -184,7 +212,7 @@
                     break;
 
                     case 'none':
-                    // Show nothing
+                    // Show nothing but text
                         image(video, 0, 0);
                         textSize(20);
                         textAlign(RIGHT, BOTTOM);
@@ -192,8 +220,12 @@
                         text("We are XD", width - 10, height - 10);
                     break;
 
-                    default:
-                        image(video, 0, 0);
+                    case 'hat':
+                        image(hatImage, hatX, hatY, hatWidth, hatHeight);
+                    break;
+
+                    case 'mustache':
+                        image(snorImage, musX, musY, musWidth, musHeight);
                     break;
                 } 
             }
