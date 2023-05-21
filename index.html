@@ -90,6 +90,12 @@
         let hatImage;
         let snorImage;
 
+        let capturedImage = null;
+        let saveButton;
+        let cancelButton;
+
+        let capturing = true;
+
         function preload() {
             hatImage = loadImage('muts.png');
             snorImage = loadImage('snor.png');
@@ -131,11 +137,49 @@
 
             poseNet = ml5.poseNet(video, modelLoaded);
             poseNet.on('pose', gotPoses);
+
+            //save button
+            saveButton = createButton('Save');
+            saveButton.mousePressed(saveImage);
+            saveButton.style('display', 'block');
+            saveButton.style('margin', '0 auto');
+            saveButton.style('margin-top', '10px')
+            saveButton.hide(); //hide the button until someone clicks snap
+
+            // Create the Cancel button
+            cancelButton = createButton('Cancel');
+            cancelButton.mousePressed(cancelSave);
+            cancelButton.style('display', 'block');
+            cancelButton.style('margin', '0 auto');
+            cancelButton.style('margin-top', '40 px');
+            cancelButton.hide();
+
         }
 
         function takesnap() {
-            let img = saveCanvas(canvas, 'myCanvas', 'jpg');
-            //image(img, 0, 0);
+            capturedImage = get();
+            image(capturedImage, 0, 0);
+            saveButton.show();
+            cancelButton.show();
+        }
+
+        function saveImage() {
+            save(capturedImage, 'myCanvas', 'jpg');
+            // Hide the Save and Cancel buttons after saving
+            saveButton.hide();
+            cancelButton.hide();
+            //start displaying again after clicking button
+            capturing = true;
+            capturedImage = null;
+        }
+
+        function cancelSave() {
+            // Hide the Save and Cancel buttons without saving
+            saveButton.hide();
+            cancelButton.hide();
+            //start displaying again after clicking button
+            capturing = true;
+            capturedImage = null;
         }
 
         function applyStarsFilter() {
@@ -173,62 +217,76 @@
 
         function draw() {
         //image(video, 0, 0); 
-            if(pose){
-                //hashtag
-                textSize(20);
-                textAlign(RIGHT, BOTTOM);
-                fill(255);
-                text("We are XD", width - 10, height - 10);
-                //variables
-                let noseX = pose.nose.x;
-                let noseY = pose.nose.y;
+            if (capturedImage == null) { //show self on screen
+                image(video, 0,0);
+                if(pose){ //filters
+                    //hashtag
+                    textSize(20);
+                    textAlign(RIGHT, BOTTOM);
+                    fill(255);
+                    text("We are XD", width - 10, height - 10);
+                    //variables
+                    let noseX = pose.nose.x;
+                    let noseY = pose.nose.y;
 
-                let eyeR = pose.rightEye;
-                let eyeL = pose.leftEye;
-                let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
+                    let eyeR = pose.rightEye;
+                    let eyeL = pose.leftEye;
+                    let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
 
-                let hatWidth = d * 2.5; // Adjust this value to scale the width of the hat
-                let hatHeight = hatWidth * (hatImage.height / hatImage.width);
+                    let hatWidth = d * 2.5; // Adjust this value to scale the width of the hat
+                    let hatHeight = hatWidth * (hatImage.height / hatImage.width);
 
-                // Calculate the position to place the hat on the person's head
-                let hatX = noseX - hatWidth / 2;
-                let hatY = noseY - hatHeight * 1.5;
+                    // Calculate the position to place the hat on the person's head
+                    let hatX = noseX - hatWidth / 2;
+                    let hatY = noseY - hatHeight * 1.5;
 
-                let musWidth = d * 1.5;
-                let musHeight = musWidth * (snorImage.height / snorImage.width);
+                    let musWidth = d * 1.5;
+                    let musHeight = musWidth * (snorImage.height / snorImage.width);
 
-                // Calculate the position to place the mustache
-                let musX = noseX - musWidth / 2;
-                let musY = noseY - musHeight * 0.1;
+                    // Calculate the position to place the mustache
+                    let musX = noseX - musWidth / 2;
+                    let musY = noseY - musHeight * 0.1;
 
+                    switch (applyFilter) {
+                        case 'stars':
+                        // Draw stars on the eyes
+                            fill(215, 247, 129);
+                            noStroke();
+                            drawStar(eyeL.x, eyeL.y, d / 3);
+                            drawStar(eyeR.x, eyeR.y, d / 3);
+                        break;
 
-                switch (applyFilter) {
-                    case 'stars':
-                    // Draw stars on the eyes
-                        fill(215, 247, 129);
-                        noStroke();
-                        drawStar(eyeL.x, eyeL.y, d / 3);
-                        drawStar(eyeR.x, eyeR.y, d / 3);
-                    break;
+                        case 'none':
+                        // Show nothing but text
+                            image(video, 0, 0);
+                            textSize(20);
+                            textAlign(RIGHT, BOTTOM);
+                            fill(255);
+                            text("We are XD", width - 10, height - 10);
+                        break;
 
-                    case 'none':
-                    // Show nothing but text
-                        image(video, 0, 0);
-                        textSize(20);
-                        textAlign(RIGHT, BOTTOM);
-                        fill(255);
-                        text("We are XD", width - 10, height - 10);
-                    break;
+                        case 'hat':
+                            //show image of hat on head
+                            image(hatImage, hatX, hatY, hatWidth, hatHeight);
+                        break;
 
-                    case 'hat':
-                        image(hatImage, hatX, hatY, hatWidth, hatHeight);
-                    break;
-
-                    case 'mustache':
-                        image(snorImage, musX, musY, musWidth, musHeight);
-                    break;
-                } 
+                        case 'mustache':
+                            //show mustache under nose
+                            image(snorImage, musX, musY, musWidth, musHeight);
+                        break;
+                    } 
+                }else {
+                    image(video, 0, 0);
+                    textSize(20);
+                    textAlign(RIGHT, BOTTOM);
+                    fill(255);
+                    text("We are XD", width - 10, height - 10);
+                }
+            }else {
+                //display the captured image
+                image(capturedImage, 0, 0);
             }
+            
         }
         function drawStar(x, y, size) {
             // Calculate the angles between points
