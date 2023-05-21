@@ -85,22 +85,38 @@
         let skeleton;
 
         let applyFilter = false; // Variable to track if the "stars" filter should be applied or not
-        let starsButton, noFilterButton; // Variables to store the buttons
-       
+        let starsButton, noFilterButton, mutsButton; // Variables to store the buttons
+
+        let hatImage;
+
+        function preload() {
+            hatImage = loadImage('muts.png');
+        }
+
         function setup() {
         let canvas = createCanvas(500, 370);
         background(51);
 
         // Create the buttons
+        
         starsButton = createButton('Stars');
         starsButton.mousePressed(applyStarsFilter); // Call the applyStarsFilter function when the button is clicked
         starsButton.style('background-color', '#653fe1');
+
         noFilterButton = createButton('No Filter');
         noFilterButton.mousePressed(applyNoFilter); // Call the applyNoFilter function when the button is clicked
         noFilterButton.style('background-color', '#653fe1');
+
+        mutsButton = createButton('Muts Joris');
+        mutsButton.mousePressed(applyMutsFilter); // Call the applyMutsFilter function when the button is clicked
+        mutsButton.style('background-color', '#653fe1');
+
+
         starsButton.position(100, 400);
         noFilterButton.position(starsButton.width + 120, 400);
-        
+        mutsButton.position(100, 450);
+
+
         video = createCapture(VIDEO); //access live webcam
         video.size(500, 370); 
 
@@ -117,11 +133,15 @@
         }
 
         function applyStarsFilter() {
-            applyFilter = true; // Set applyFilter to true to apply the "stars" filter
+            applyFilter ='stars'; // Set applyFilter to true to apply the "stars" filter
+        }
+
+        function applyMutsFilter() {
+            applyFilter = 'muts'; // Set applymuts to true to apply the "stars" filter
         }
 
         function applyNoFilter() {
-            applyFilter = false; // Set applyFilter to false to show the camera feed without a filter
+            applyFilter = 'none'; // Set applyFilter to false to show the camera feed without a filter
         }
 
         function gotPoses(poses){
@@ -154,16 +174,28 @@
                 let eyeL = pose.leftEye;
                 let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
 
-                if (applyFilter) {
+                switch (applyFilter) {
+                    case 'stars':
                     // Draw stars on the eyes
-                    fill(215, 247, 129);
-                    noStroke();
-                    drawStar(eyeL.x, eyeL.y, d / 3);
-                    drawStar(eyeR.x, eyeR.y, d / 3);
-                } else {
-                // Display the camera feed without a filter
-                image(video, 0, 0);
-                }
+                        fill(215, 247, 129);
+                        noStroke();
+                        drawStar(eyeL.x, eyeL.y, d / 3);
+                        drawStar(eyeR.x, eyeR.y, d / 3);
+                    break;
+
+                    case 'none':
+                    // Show nothing
+                        image(video, 0, 0);
+                        textSize(20);
+                        textAlign(RIGHT, BOTTOM);
+                        fill(255);
+                        text("We are XD", width - 10, height - 10);
+                    break;
+
+                    default:
+                        image(video, 0, 0);
+                    break;
+                } 
             }
         }
         function drawStar(x, y, size) {
