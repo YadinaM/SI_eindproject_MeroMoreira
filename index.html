@@ -141,18 +141,28 @@
             //save button
             saveButton = createButton('Save');
             saveButton.mousePressed(saveImage);
-            saveButton.style('display', 'block');
-            saveButton.style('margin', '0 auto');
-            saveButton.style('margin-top', '10px')
             saveButton.hide(); //hide the button until someone clicks snap
 
             // Create the Cancel button
             cancelButton = createButton('Cancel');
             cancelButton.mousePressed(cancelSave);
-            cancelButton.style('display', 'block');
-            cancelButton.style('margin', '0 auto');
-            cancelButton.style('margin-top', '40 px');
             cancelButton.hide();
+
+            //position save and cancel button
+            //Create the container div element
+            buttonsContainer = createDiv();
+            buttonsContainer.style('display', 'flex');
+            buttonsContainer.style('justify-content', 'center');
+            buttonsContainer.style('margin-top', '10px');
+            buttonsContainer.style('margin-bottom', '10px');
+
+            saveButton.style('margin-right', '10px'); // Adjust the margin as per your preference
+            cancelButton.style('margin-left', '10px'); // Adjust the margin as per your preference
+
+
+            // Add the Save and Cancel buttons to the container
+            buttonsContainer.child(saveButton);
+            buttonsContainer.child(cancelButton);
 
         }
 
@@ -286,8 +296,8 @@
                 //display the captured image
                 image(capturedImage, 0, 0);
             }
-            
         }
+
         function drawStar(x, y, size) {
             // Calculate the angles between points
             let angle = TWO_PI / 5;
@@ -305,7 +315,7 @@
                 vertex(px, py);
             }
             endShape(CLOSE);
-            }
+        }
 
     </script>
 </html>
