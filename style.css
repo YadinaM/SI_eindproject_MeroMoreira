@@ -1,0 +1,53 @@
+body{
+    background: #000;
+
+ }
+ video{
+     display:none;
+     /* hide the video element, but still need it to capture the video */
+ }
+ canvas{
+     margin-left: auto;
+     margin-right: auto;
+     display: block;
+     border-radius: 10px;
+ }
+ button{
+     margin-left: auto;
+     margin-right: auto;
+     display: block;
+     background-color:aquamarine;
+     font-family: "sofia-pro", sans-serif;
+     font-weight: 700;
+     border:none;
+     padding-left:40px;
+     padding-right:40px;
+     padding-top:10px;
+     padding-bottom:10px;
+     border-radius: 10px;
+     margin-top: 20px;
+ }
+ button:hover{
+     background-color: #EF865A;
+     color: white;
+ }
+ h1{
+     text-align: center;
+     color: white;
+     font-family: "futura-pt-bold", sans-serif;
+     font-weight: 700;
+     font-style: normal;
+     letter-spacing:1px;
+ }
+ p{
+     text-align: center;
+     color: #EF865A;
+     font-family: "sofia-pro", sans-serif;
+     font-weight: 400;
+     font-style: normal;
+     letter-spacing:1px;
+ }
+ starsButton{
+     background-color: #653fe1;
+     color: white;
+ }
