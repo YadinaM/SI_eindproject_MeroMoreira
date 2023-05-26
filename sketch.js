@@ -69,7 +69,7 @@ function takesnap() {
 }
 
 function saveImage() {
-  save(capturedImage, 'myCanvas', 'jpg');
+  save(capturedImage, 'myCanvas', 'png');
   saveButton.hide();
   cancelButton.hide();
   capturing = true;
